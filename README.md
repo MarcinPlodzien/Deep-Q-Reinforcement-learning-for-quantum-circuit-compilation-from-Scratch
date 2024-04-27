@@ -14,7 +14,8 @@ Code contains:
 
 The code runs set of episodes during which the Agent learns. History of each epsiode is collected in the Pandas dataframe. From dataframe one can extract the optimal set of gates implementing unitary transforming the initial state into the target state with the highes fidelity.
 
-To learn about theoretical foundations of Reinforcement Learning for Quantum Technologies I strongly suggest : https://arxiv.org/abs/2204.04198
+To learn about theoretical foundations of Reinforcement Learning for Quantum Technologies I strongly suggest our Book
+"Modern Applications of Machine Learning in Quantum Sciences": https://arxiv.org/abs/2204.04198
 
 Example output for the preparing two-qubit |GHZ> state starting with initial |11> state.
 
