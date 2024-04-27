@@ -14,5 +14,7 @@ Code contains:
 
 The code runs set of episodes during which the Agent learns. History of each epsiode is collected in the Pandas dataframe. From dataframe one can extract the optimal set of gates implementing unitary transforming the initial state into the target state with the highes fidelity.
 
+Example output for the preparing two-qubit |GHZ> state starting with initial |11> state.
 
+![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch/assets/95550675/8e63e8d8-9726-4654-8ace-54960efb83f5)
 
