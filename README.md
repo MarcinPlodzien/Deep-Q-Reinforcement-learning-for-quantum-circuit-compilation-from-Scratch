@@ -1,6 +1,6 @@
 # Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch
 
-Simple and straightforward educational implementation of a deep Q-learning agent for quantum circuit compilation task.
+Simple and straightforward educational implementation of a Deep-Q-learning and Double-Deep-Q-learning agent for quantum circuit compilation task.
 
 Code contains:
 1. Implementation of the Environment representing quantum state of L-qubit system with set of actions given by predefined quantum gates.
@@ -17,7 +17,14 @@ The code runs set of episodes during which the Agent learns. History of each eps
 To learn about theoretical foundations of Reinforcement Learning for Quantum Technologies I strongly suggest our Book
 "Modern Applications of Machine Learning in Quantum Sciences": https://arxiv.org/abs/2204.04198
 
-Example output for the preparing two-qubit |GHZ> state starting with initial |11> state.
+Examples:
+1. Preparing 2-qubit |GHZ> state starting from |00> state with Deep-Q-Learning agent
+![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch/assets/95550675/a31a1cb7-8ef5-4ff6-b53c-0973435b0d2e)
 
-![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch/assets/95550675/8e63e8d8-9726-4654-8ace-54960efb83f5)
+
+
+
+2. Preparing 3-qubit |GHZ> state starting from |000> state with Double-Deep-Q-Learning agent
+   ![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch/assets/95550675/85fdf54e-d365-4b4f-be24-b7946be8376e)
+
 
