@@ -1,4 +1,4 @@
-# Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch
+# Deep-Q-Reinforcement-learning-for-quantum-circuit-compilation-from-Scratch
 
 Simple and straightforward educational implementation of a Deep-Q-learning and Double-Deep-Q-learning Agent for quantum circuit compilation task.
 
