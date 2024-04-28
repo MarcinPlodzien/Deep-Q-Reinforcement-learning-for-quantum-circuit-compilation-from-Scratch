@@ -24,11 +24,18 @@ Examples:
 ![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch/assets/95550675/b18aa8d5-d99d-435a-8c32-f1654de2dbdb)
 
 
-
-
-3. Preparing 3-qubit |GHZ> state starting from |000> state with Double-Deep-Q-Learning agent
+2. Preparing 3-qubit |GHZ> state starting from |000> state with Double-Deep-Q-Learning agent
 ![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch/assets/95550675/bde001ea-2f61-4097-9ed3-f35e7819684c)
 
+
+If you use this code for work that you publish, please cite this repository.
+
+@misc{DDQL_QC,
+  author = {Marcin Płodzień},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{[https://github.com/frederikwilde/qradient](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch)}}
+}
 
 
 
