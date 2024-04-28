@@ -4,6 +4,6 @@ authors:
 - family-names: "Płodzień"
   given-names: "Marcin"
   orcid: "https://orcid.org/0000-0002-0835-1644"
-title: "Double-Deep-Q-learning-for-Quantum-Circuit-Compilation-from-Scratch"
+title: "Deep-Q-Reinforcement-Learning-for-quantum-state-compilation-from-Scratch"
 date-released: 2024-04-27
 url: "https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch"
