@@ -24,7 +24,8 @@ Examples:
 
 
 3. Preparing 3-qubit |GHZ> state starting from |000> state with Double-Deep-Q-Learning agent
-![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch/assets/95550675/2d8d965e-47dc-48b6-84cf-8b65bd1aef66)
+![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch/assets/95550675/bde001ea-2f61-4097-9ed3-f35e7819684c)
+
 
 
 
