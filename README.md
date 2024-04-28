@@ -30,12 +30,5 @@ Examples:
 
 If you use this code for work that you publish, please cite this repository.
 
-@misc{DDQL_QC,
-  author = {Marcin Płodzień},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{[https://github.com/frederikwilde/qradient](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch)}}
-}
-
 
 
