@@ -20,12 +20,15 @@ To learn about theoretical foundations of Reinforcement Learning for Quantum Tec
 "Modern Applications of Machine Learning in Quantum Sciences": https://arxiv.org/abs/2204.04198
 
 Examples:
-1. Preparing 3-qubit |GHZ> state starting from |000> state with Deep-Q-Learning agent
-![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch/assets/95550675/b18aa8d5-d99d-435a-8c32-f1654de2dbdb)
+1. Preparing 4-qubit |GHZ> state starting from |0000> state with Deep-Q-Learning agent with Hadamard and CZ gates
+![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-circuit-compilation-from-Scratch/assets/95550675/f647dbca-1b5d-44e6-8b1e-444675878746)
 
 
-2. Preparing 3-qubit |GHZ> state starting from |000> state with Double-Deep-Q-Learning agent
-![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-state-compilation-from-Scratch/assets/95550675/bde001ea-2f61-4097-9ed3-f35e7819684c)
+
+2. Preparing 3-qubit |GHZ> state starting from |000> state with Double-Deep-Q-Learning agent with Hadamard and CNOT gates
+![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-circuit-compilation-from-Scratch/assets/95550675/4f628db2-2c78-4e2d-ab21-9a7d45e9dce6)
+
+
 
 
 If you use this code for work that you publish, please cite this repository.
