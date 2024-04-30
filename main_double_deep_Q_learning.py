@@ -6,7 +6,6 @@ import torch.nn as nn
 import pandas as pd
 from tqdm import tqdm
 import copy
- 
 
 def get_Identity(k):  # returns k-tensor product of the identity operator, ie. Id^k
     Id = id_local
@@ -32,32 +31,68 @@ def get_chain_operators(L):
     X = {}
     Y = {}
     Z = {}
+    S = {}
+    T = {}
     Hadamard = {}
+ 
     for qubit_i in range(1, L+1):                                    
-        X[qubit_i] = get_chain_operator(sigma_x, L, qubit_i)       
-        Y[qubit_i] = get_chain_operator(sigma_y, L, qubit_i)        
-        Z[qubit_i] = get_chain_operator(sigma_z, L, qubit_i)       
+        X[qubit_i]       = get_chain_operator(sigma_x, L, qubit_i)       
+        Y[qubit_i]       = get_chain_operator(sigma_y, L, qubit_i)        
+        Z[qubit_i]       = get_chain_operator(sigma_z, L, qubit_i)   
         Hadamard[qubit_i] = get_chain_operator(hadamard, L, qubit_i)       
-    return Id, X, Y, Z, Hadamard
+        S[qubit_i] = get_chain_operator(s, L, qubit_i) 
+        T[qubit_i] = get_chain_operator(t, L, qubit_i) 
 
-id_local = pt.tensor([[1.,0],[0,1.]], dtype=pt.complex64)
-sigma_x = pt.tensor([[0,1.],[1.,0]], dtype=pt.complex64)
-sigma_y = 1j*pt.tensor([[0,-1.],[1.,0]], dtype=pt.complex64)
-sigma_z = pt.tensor([[1.,0],[0,-1.]], dtype=pt.complex64)
-hadamard = 1.0/pt.sqrt(pt.tensor(2))*pt.tensor([[1,1],[1,-1]], dtype=pt.complex64)+1j*0    
+    return Id, X, Y, Z, Hadamard, S, T
+
+id_local = pt.tensor([
+                      [1., 0],
+                      [0., 1.]
+                      ], dtype=pt.complex64)
+
+sigma_x = pt.tensor([
+                     [0., 1.],
+                     [1., 0.]
+                     ], dtype=pt.complex64)
+
+sigma_y = 1j*pt.tensor([
+                        [0., -1.],
+                        [1.,  0.]
+                        ], dtype=pt.complex64)
+
+sigma_z = pt.tensor([
+                     [1.,  0.],
+                     [0., -1.]
+                     ], dtype=pt.complex64)
+
+hadamard = 1.0/pt.sqrt(pt.tensor(2))*pt.tensor([
+                                                [1., 1.],
+                                                [1.,-1.]
+                                                ], dtype=pt.complex64)  
+s = pt.tensor([
+                [1., 0.],
+                [0., np.exp(1j*np.pi/2.)]
+                ], dtype=pt.complex64)  
+ 
+
+t = pt.tensor([
+                [1., 0.],
+                [0., np.exp(1j*np.pi/4.)]
+                ], dtype=pt.complex64) 
+
 
 def get_range(i,j):
-    return np.arange(i,j+1)  
+    return np.arange(i,j+1)
 
-
+#%%
 class QuantumCircuitEnvironment:
     def __init__(self, L, psi_initial, psi_target,  max_steps, fidelity_threshold):
         
         self.L = L                      # Number of qubits
         self.D = 2**L                   # Hilbert space size
         self.state_dimension = 2**(L+1) # doubled size for (Re[psi], Im[psi])
-        self.Id, self.X, self.Y, self.Z, self.Hadamard = get_chain_operators(L)
-        self.CNOT = {}
+        self.Id, self.X, self.Y, self.Z, self.Hadamard, self.S, self.T = get_chain_operators(L)
+    
         self.X_total = sum([self.X[i] for i in get_range(1,L)])
         self.Y_total = sum([self.Y[i] for i in get_range(1,L)])
         self.Z_total = sum([self.Z[i] for i in get_range(1,L)])
@@ -70,51 +105,110 @@ class QuantumCircuitEnvironment:
         self.psi_target = psi_target        # target quantum state
         self.psi_current = self.psi_initial
         self.norm = pt.sum(pt.abs(self.psi_current)**2)        
-        # self.phase_grid = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1] #discretization for phase of gates, in units of pi
-        self.phase_grid = [0.25, 0.5, 0.75, 1] #discretization for phase of gates, in units of pi
-        # Each actions is a tuple (gate, qubit_i, qubit_j, theta) where
+        self.phase_grid = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1] #discretization for phase of gates, in units of pi
+        # self.phase_grid = [0.25, 0.5, 0.75, 1] #discretization for phase of gates, in units of pi
+       
+        # Each action is a tuple (gate, qubit_i, qubit_j, theta) where
         # gate - quantum operator
         # qubit_i, qubit_j - index of qubits for two-qubit gates, if gate is global then (-1, -1), if gate is single qubit then (qubit_i, -1)
-        self.action_space_local_basic_gates = [(gate_symbol, i, i, -1) for gate_symbol in ["X",  "H"] for i in get_range(1, L)]  
-        self.action_space_global_basic_gates = [(gate_symbol, -1, -1, -1) for gate_symbol in ["X_global", "H_global"] for i in get_range(1, L)]  
-        self.action_space_global_rotations = [(gate_symbol, -1, -1, phase) for gate_symbol in [ "Rx_global",  "Rz_global"]  for phase in self.phase_grid] 
-        self.action_space_local_rotations  = [(gate_symbol, i, i, phase) for gate_symbol in [ "Rx_local",  "Rz_local"] for i in get_range(1, L) for phase in self.phase_grid] 
-        self.action_space_entangling_parametrized_gates     = [(gate_symbol, i, j, phase) for gate_symbol in ["Rxx", "Rzz"] for i in get_range(1, L-1) for j in get_range(i+1, L) for phase in self.phase_grid] 
-        self.action_space_entangling_non_parametrized_gates = [(gate_symbol, i, j, -1) for gate_symbol in ["CNOT"] for i in get_range(1, L-1) for j in get_range(i+1, L)]  
-        self.action_space = []
-        self.action_space += self.action_space_local_basic_gates
-        # self.action_space += self.action_space_global_basic_gates
-        # self.action_space += self.action_space_global_rotations
-        # self.action_space += self.action_space_local_rotations
-        # self.action_space += self.action_space_entangling_parametrized_gates
-        self.action_space += self.action_space_entangling_non_parametrized_gates
+ 
+    
+        ################################################################
+        ################    Non-parametrized gates      ################
+        ################################################################ 
+        # local gates
+        self.H_local = [(gate_symbol, i, -1, -1) for gate_symbol in ["H_local"] for i in get_range(1, L)]
+        self.X_local = [(gate_symbol, i, -1, -1) for gate_symbol in ["X_local"] for i in get_range(1, L)]
+        self.Y_local = [(gate_symbol, i, -1, -1) for gate_symbol in ["Y_local"] for i in get_range(1, L)]
+        self.Z_local = [(gate_symbol, i, -1, -1) for gate_symbol in ["Z_local"] for i in get_range(1, L)]
+        self.S_local = [(gate_symbol, i, -1, -1) for gate_symbol in ["S_local"] for i in get_range(1, L)]
+        self.T_local = [(gate_symbol, i, -1, -1) for gate_symbol in ["T_local"] for i in get_range(1, L)]
+            
+        # global gates
+        self.H_global = [(gate_symbol, -1, -1, -1) for gate_symbol in ["H_global"] for i in get_range(1, L)]
+        self.X_global = [(gate_symbol, -1, -1, -1) for gate_symbol in ["X_global"] for i in get_range(1, L)]
+        self.Y_global = [(gate_symbol, -1, -1, -1) for gate_symbol in ["Y_global"] for i in get_range(1, L)]
+        self.Z_global = [(gate_symbol, -1, -1, -1) for gate_symbol in ["Z_global"] for i in get_range(1, L)]        
+
+        # two-qubit entangling gates
+        self.CZ   = [(gate_symbol, i, j, -1) for gate_symbol in ["CZ"] for i in get_range(1, L-1) for j in get_range(i+1, L)]  
+        self.CNOT = [(gate_symbol, i, j, -1) for gate_symbol in ["CNOT"] for i in get_range(1, L-1) for j in get_range(i+1, L)]  
+        self.SWAP = [(gate_symbol, i, j, -1) for gate_symbol in ["SWAP"] for i in get_range(1, L-1) for j in get_range(i+1, L)]  
+               
+
+        ################################################################
+        ################        Parametrized gates      ################
+        ################################################################ 
+        # single qubit local rotations
+        self.Rx_local  = [(gate_symbol, i, -1, phase) for gate_symbol in [ "Rx_local"] for i in get_range(1, L) for phase in self.phase_grid] 
+        self.Ry_local  = [(gate_symbol, i, -1, phase) for gate_symbol in [ "Ry_local"] for i in get_range(1, L) for phase in self.phase_grid] 
+        self.Rz_local  = [(gate_symbol, i, -1, phase) for gate_symbol in [ "Rz_local"] for i in get_range(1, L) for phase in self.phase_grid] 
+        
+        # global rotations
+        self.Rx_global  = [(gate_symbol, i, -1, phase) for gate_symbol in [ "Rx_global"] for i in get_range(1, L) for phase in self.phase_grid] 
+        self.Ry_global  = [(gate_symbol, i, -1, phase) for gate_symbol in [ "Ry_global"] for i in get_range(1, L) for phase in self.phase_grid] 
+        self.Rz_global  = [(gate_symbol, i, -1, phase) for gate_symbol in [ "Rz_global"] for i in get_range(1, L) for phase in self.phase_grid] 
+
+        # two-qubit entanglig gates
+        self.Rxx  = [(gate_symbol, i, j, phase) for gate_symbol in ["Rxx"] for i in get_range(1, L-1) for j in get_range(i+1, L) for phase in self.phase_grid] 
+        self.Rzz  = [(gate_symbol, i, j, phase) for gate_symbol in ["Rzz"] for i in get_range(1, L-1) for j in get_range(i+1, L) for phase in self.phase_grid] 
+     
+
+        self.actions_space = []
+        self.actions_space += self.CNOT
+        # self.actions_space += self.CZ
+        self.actions_space += self.H_local
+
+  
+        # Clifford group + T_phase gate : {CNOT, H, S_phase} + T_phase
+        # self.actions_space = []
+        # self.actions_space += self.CNOT
+        # self.actions_space += self.H_local
+        # self.actions_space += self.S_local
+        # self.actions_space += self.T_local
+ 
+
         self.max_steps = max_steps
         self.fidelity_threshold = fidelity_threshold
         self.current_step = 0
- 
-
         
-        for i in get_range(1, L):
-            for j in get_range(1, L):
-                if(i!=j):
-                    self.CNOT[i,j] = expm(pt.pi/4*(self.Id - self.X[i])@(self.Id - self.Z[j])*1j)
-                else:
-                    self.CNOT[i,j] = self.Id
-                
+    def get_CNOT(self, i, j):
+        if(i!=j):
+            return expm(1j*pt.pi*(self.Id - self.X[i])@(self.Id - self.Z[j])*0.25)
+        else:
+            return self.Id
+        
+    def get_CZ(self, i, j):
+        if(i!=j):
+            return expm(1j*pt.pi*(self.Id - self.X[i])@(self.Id - self.Z[j])*0.25)
+        else:
+            return self.Id        
+        
+    def get_SWAP(self, i,j):
+        return 0.5*(self.Id@self.Id + self.X[i]@self.X[j] + self.Y[i]@self.Y[j] + self.Z[i]@self.Z[j])
+        
+        
+ 
 
     def get_gate(self, gate_symbol, i, j, theta):
         
-        if(gate_symbol == "X"):
+        if(gate_symbol == "X_local"):
             return self.X[i]
         
-        elif(gate_symbol == "Y"):
+        elif(gate_symbol == "Y_local"):
             return self.Y[i]
         
-        elif(gate_symbol == "Z"):
+        elif(gate_symbol == "Z_local"):
             return self.Z[i]
         
-        elif(gate_symbol == "H"):
+        elif(gate_symbol == "H_local"):
             return self.Hadamard[i]
+        
+        elif(gate_symbol == "S_local"):
+            return self.S[i]
+        
+        elif(gate_symbol == "T_local"):
+            return self.T[i]
 
         if(gate_symbol == "X_global"):
             X_global = self.Id
@@ -138,38 +232,43 @@ class QuantumCircuitEnvironment:
             H_global = self.Id
             for i in get_range(1,L):
                 H_global = self.Hadamard[i]@H_global
-            return H_global
-  
+            return H_global        
  
         elif(gate_symbol == "Rx_local"):
-            return expm(-1j*theta*pt.pi*self.X[i])
+            return expm(-1j*theta*pt.pi*self.X[i]*0.5)
         
         elif(gate_symbol == "Ry_local"):
-            return expm(-1j*theta*pt.pi*self.Y[i])
+            return expm(-1j*theta*pt.pi*self.Y[i]*0.5)
         
         elif(gate_symbol == "Rz_local"):
-            return expm(-1j*theta*pt.pi*self.Z[i])
+            return expm(-1j*theta*pt.pi*self.Z[i]*0.5)
 
         elif(gate_symbol == "Rx_global"):
-            return expm(-1j*theta*pt.pi*self.X_total)
+            return expm(-1j*theta*pt.pi*self.X_total*0.5)
         
         elif(gate_symbol == "Ry_global"):
-            return expm(-1j*theta*pt.pi*self.Y_total)
+            return expm(-1j*theta*pt.pi*self.Y_total*0.5)
         
         elif(gate_symbol == "Rz_global"):
-            return expm(-1j*theta*pt.pi*self.Z_total)
+            return expm(-1j*theta*pt.pi*self.Z_total*0.5)
         
         elif(gate_symbol == "Rxx"):
-            return expm(-1j*theta*pt.pi*self.X[i]@self.X[j])
+            return expm(-1j*theta*pt.pi*self.X[i]@self.X[j]*0.25)
         
         elif(gate_symbol == "Ryy"):
-            return expm(-1j*theta*pt.pi*self.X[i]@self.X[j])
+            return expm(-1j*theta*pt.pi*self.Y[i]@self.Y[j]*0.25)
 
         elif(gate_symbol == "Rzz"):
-            return expm(-1j*theta*pt.pi*self.X[i]@self.X[j])
+            return expm(-1j*theta*pt.pi*self.Z[i]@self.Z[j]*0.25)
 
         elif(gate_symbol == "CNOT"):
-            return self.CNOT[i, j]
+            return self.get_CNOT(i,j)
+        
+        elif(gate_symbol == "SWAP"):
+            return self.get_SWAP(i,j)
+
+        elif(gate_symbol == "CZ"):
+            return self.get_CZ(i,j)
     
         elif(gate_symbol == "Id"):
             return self.Id
@@ -217,7 +316,7 @@ class QuantumCircuitEnvironment:
         self.current_step += 1
         done = self.current_step >= self.max_steps or new_fidelity >= self.fidelity_threshold
  
-        return psi_next, reward, done  
+        return psi_next, reward, done    
 #%% 
 
 class DQNNetwork(nn.Module):
@@ -228,12 +327,8 @@ class DQNNetwork(nn.Module):
             nn.Linear(input_dim, 128),
             nn.ReLU(),
             nn.Linear(128, 64),
-            nn.ReLU(), 
-            nn.Linear(64, 64),
-            nn.ReLU(),     
-            nn.Linear(64, 32),
             nn.ReLU(),
-            nn.Linear(32, output_dim)
+            nn.Linear(64, output_dim)
         )
 
     def forward(self, x):
@@ -241,15 +336,15 @@ class DQNNetwork(nn.Module):
  
 
 class DQNAgent:
-    def __init__(self, action_space, state_dim, learning_rate, gamma, epsilon, update_target_every):
-        self.action_space = action_space
+    def __init__(self, actions_space, state_dim, learning_rate, gamma, epsilon, update_target_every):
+        self.actions_space = actions_space
         self.state_dim = state_dim
         self.gamma = gamma
         self.epsilon = epsilon
         self.update_target_every = update_target_every
         self.steps_done = 0
         self.action_history = []
-        self.model = DQNNetwork(state_dim, len(action_space))
+        self.model = DQNNetwork(state_dim, len(actions_space))
         self.target_model = copy.deepcopy(self.model)
         self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
         self.criterion = nn.MSELoss()
@@ -264,32 +359,38 @@ class DQNAgent:
     
     def choose_action(self):
         if np.random.uniform(0, 1) < self.epsilon:             
-            action_idx = np.random.randint(len(self.action_space))
+            action_idx = np.random.randint(len(self.actions_space))
         else:
             psi_current_Re_Im = pt.concatenate([psi_current.real, psi_current.imag], dim=-1)
             q_values = self.model(psi_current_Re_Im)
             action_idx = pt.argmax(q_values).item()
         return action_idx
         
+    # def act(self):     # Choose action without constraints
+    #     action_idx = self.choose_action()
+    #     return self.actions_space[action_idx], action_idx      
  
-    def act(self):     # we make sure than actions are not repeat one after another
-        done = True
-        while( done ):
-            action_idx = self.choose_action()
-            if(action_idx != self.action_idx_previous):       
-                self.action_idx_previous = action_idx
-                done = False
-        return self.action_space[action_idx], action_idx
-
-    # def act(self):     # we make sure than two similar gates symbols are not repeat one after another
-    #     done = True
-    #     while( done ):
+    # def act(self):     # we make sure that two consecutive actions are not identical
+    #     control_check = True
+    #     while( control_check ):
     #         action_idx = self.choose_action()
-    #         action_gate_symbol, _, _, _ = self.action_space[action_idx]
-    #         if(action_gate_symbol != self.action_gate_symbol_previous):       
+    #         action_gate_symbol, _, _, _ = self.actions_space[action_idx]
+    #         if(action_idx != self.action_idx_previous):       
+    #             self.action_idx_previous = action_idx
     #             self.action_gate_symbol_previous = action_gate_symbol
-    #             done = False        
-    #     return self.action_space[action_idx], action_idx    
+    #             control_check = False
+    #     return self.actions_space[action_idx], action_idx
+
+    def act(self):     # we make sure that two consecutive gates symbols are not identical
+        control_check = True
+        while( control_check ):
+            action_idx = self.choose_action()
+            action_gate_symbol, _, _, _ = self.actions_space[action_idx]
+            if(action_gate_symbol != self.action_gate_symbol_previous):       
+                self.action_gate_symbol_previous = action_gate_symbol
+                control_check = False
+        
+        return self.actions_space[action_idx], action_idx    
     
     
     def learn(self, psi_current, action_idx, reward, psi_next, done):
@@ -354,7 +455,7 @@ def print_quantum_state(psi, psi_string):
 
 # Helper code helping defining target and final states in convinient notations
  
-L = 3  # Number of qubits
+L = 4  # Number of qubits
 
 D = 2**L
 Id = get_chain_operator(id_local, L, 1)
@@ -376,32 +477,27 @@ for v_idx in range(0,basis_Fock.shape[0]):
  
 
  
-psi_initial = ket["|000>"]                      # Initial state of quantum circuit
+psi_initial = ket["|0000>"]                      # Initial state of quantum circuit
 norm = pt.sum(pt.abs(psi_initial)**2)
 psi_initial = psi_initial/pt.sqrt(norm)
 
-psi_target = ket["|000>"] + ket["|111>"]     # Target state of quantum circuit
+psi_target = ket["|0000>"] + ket["|1111>"]      # Target state of quantum circuit
 norm = pt.sum(pt.abs(psi_target)**2)
 psi_target = psi_target/pt.sqrt(norm)
 
 fidelity_threshold  = 0.99                       # 
-max_steps           = 10                        # maximum number of agent steps
+max_steps           = 60                        # maximum number of agent steps
 learning_rate       = 1e-4                      # optimizer learning rate
 gamma               = 0.99                       # discount factor
-epsilon             = 0.3                       # epsilon-greedy strategy parameter
+epsilon             = 0.1                       # epsilon-greedy strategy parameter
 N_episodes          = 2000                      # number of training episodes
 
 env = QuantumCircuitEnvironment(L, psi_initial, psi_target,  max_steps, fidelity_threshold)
 
  
 update_target_every = 10  # Update target network every 10 steps
-agent = DQNAgent(env.action_space, env.state_dimension, learning_rate, gamma, epsilon, update_target_every)
+agent = DQNAgent(env.actions_space, env.state_dimension, learning_rate, gamma, epsilon, update_target_every)
 
-
-model = DQNNetwork(env.state_dimension, len(env.action_space))
- 
-update_target_every = 10  # Update target network every 10 steps
-agent = DQNAgent(env.action_space, env.state_dimension, learning_rate, gamma, epsilon, update_target_every)
 
 # Modified training loop
 training_history = []
