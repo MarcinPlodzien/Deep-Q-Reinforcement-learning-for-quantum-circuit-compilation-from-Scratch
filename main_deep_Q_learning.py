@@ -50,31 +50,35 @@ id_local = pt.tensor([
                       [1., 0],
                       [0., 1.]
                       ], dtype=pt.complex64)
-
+# Pauli-X
 sigma_x = pt.tensor([
                      [0., 1.],
                      [1., 0.]
                      ], dtype=pt.complex64)
 
+# Pauli-Y
 sigma_y = 1j*pt.tensor([
                         [0., -1.],
                         [1.,  0.]
                         ], dtype=pt.complex64)
 
+# Pauli-Z
 sigma_z = pt.tensor([
                      [1.,  0.],
                      [0., -1.]
                      ], dtype=pt.complex64)
-
+# Hadamard H
 hadamard = 1.0/pt.sqrt(pt.tensor(2))*pt.tensor([
                                                 [1., 1.],
                                                 [1.,-1.]
                                                 ], dtype=pt.complex64)  
+# S-phase gate
 s = pt.tensor([
                 [1., 0.],
                 [0., np.exp(1j*np.pi/2.)]
                 ], dtype=pt.complex64)  
 
+# T-phase gate
 t = pt.tensor([
                 [1., 0.],
                 [0., np.exp(1j*np.pi/4.)]
