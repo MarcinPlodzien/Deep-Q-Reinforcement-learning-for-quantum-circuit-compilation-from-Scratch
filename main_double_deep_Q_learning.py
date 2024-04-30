@@ -136,7 +136,7 @@ class QuantumCircuitEnvironment:
 
         # two-qubit entangling gates
         self.CZ   = [(gate_symbol, i, j, -1) for gate_symbol in ["CZ"] for i in get_range(1, L-1) for j in get_range(i+1, L)]  
-        self.CNOT = [(gate_symbol, i, j, -1) for gate_symbol in ["CNOT"] for i in get_range(1, L-1) for j in get_range(i+1, L)]  
+        self.CNOT = [(gate_symbol, i, j, -1) for gate_symbol in ["CNOT"] for i in get_range(1, L-1) for j in get_range(1, L)]  
         self.SWAP = [(gate_symbol, i, j, -1) for gate_symbol in ["SWAP"] for i in get_range(1, L-1) for j in get_range(i+1, L)]  
                
 
@@ -160,8 +160,11 @@ class QuantumCircuitEnvironment:
 
         self.actions_space = []
         self.actions_space += self.CNOT
+        # self.actions_space += self.SWAP
         # self.actions_space += self.CZ
         self.actions_space += self.H_local
+        # self.actions_space += self.Rx_local
+        # self.actions_space += self.T_local
 
   
         # Clifford group + T_phase gate : {CNOT, H, S_phase} + T_phase
@@ -392,8 +395,7 @@ class DQNAgent:
             action_gate_symbol, _, _, _ = self.actions_space[action_idx]
             if(action_gate_symbol != self.action_gate_symbol_previous):       
                 self.action_gate_symbol_previous = action_gate_symbol
-                control_check = False
-        
+                control_check = False        
         return self.actions_space[action_idx], action_idx    
     
     
@@ -459,7 +461,7 @@ def print_quantum_state(psi, psi_string):
 
 # Helper code helping defining target and final states in convinient notations
  
-L = 4  # Number of qubits
+L = 3 # Number of qubits
 
 D = 2**L
 Id = get_chain_operator(id_local, L, 1)
@@ -481,16 +483,16 @@ for v_idx in range(0,basis_Fock.shape[0]):
  
 
  
-psi_initial = ket["|0000>"]                      # Initial state of quantum circuit
+psi_initial = ket["|000>"]                      # Initial state of quantum circuit
 norm = pt.sum(pt.abs(psi_initial)**2)
 psi_initial = psi_initial/pt.sqrt(norm)
 
-psi_target = ket["|0000>"] + ket["|1111>"]      # Target state of quantum circuit
+psi_target = ket["|000>"] + ket["|111>"]      # Target state of quantum circuit
 norm = pt.sum(pt.abs(psi_target)**2)
 psi_target = psi_target/pt.sqrt(norm)
 
 fidelity_threshold  = 0.99                       # 
-max_steps           = 60                        # maximum number of agent steps
+max_steps           = 20                        # maximum number of agent steps
 learning_rate       = 1e-4                      # optimizer learning rate
 gamma               = 0.99                       # discount factor
 epsilon             = 0.1                       # epsilon-greedy strategy parameter
