@@ -21,7 +21,8 @@ To learn about theoretical foundations of Reinforcement Learning for Quantum Tec
 
 Examples:
 1. Preparing 4-qubit |GHZ> state starting from |0000> state with Deep-Q-Learning agent with Hadamard and CZ gates
-![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-circuit-compilation-from-Scratch/assets/95550675/f647dbca-1b5d-44e6-8b1e-444675878746)
+![image](https://github.com/MarcinPlodzien/Deep-Q-Reinforcement-learning-for-quantum-circuit-compilation-from-Scratch/assets/95550675/616b7685-5033-4f5d-88ac-392d4c4b9e88)
+
 
 
 
