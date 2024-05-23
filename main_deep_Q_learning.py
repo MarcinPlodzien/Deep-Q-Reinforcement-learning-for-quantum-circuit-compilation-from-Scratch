@@ -149,9 +149,9 @@ class QuantumCircuitEnvironment:
         self.Rz_local  = [(gate_symbol, i, -1, phase) for gate_symbol in [ "Rz_local"] for i in get_range(1, L) for phase in self.phase_grid] 
         
         # global rotations
-        self.Rx_global  = [(gate_symbol, i, -1, phase) for gate_symbol in [ "Rx_global"] for i in get_range(1, L) for phase in self.phase_grid] 
-        self.Ry_global  = [(gate_symbol, i, -1, phase) for gate_symbol in [ "Ry_global"] for i in get_range(1, L) for phase in self.phase_grid] 
-        self.Rz_global  = [(gate_symbol, i, -1, phase) for gate_symbol in [ "Rz_global"] for i in get_range(1, L) for phase in self.phase_grid] 
+        self.Rx_global  = [(gate_symbol, -1, -1, phase) for gate_symbol in [ "Rx_global"] for i in get_range(1, L) for phase in self.phase_grid] 
+        self.Ry_global  = [(gate_symbol, -1, -1, phase) for gate_symbol in [ "Ry_global"] for i in get_range(1, L) for phase in self.phase_grid] 
+        self.Rz_global  = [(gate_symbol, -1, -1, phase) for gate_symbol in [ "Rz_global"] for i in get_range(1, L) for phase in self.phase_grid] 
 
         # two-qubit entanglig gates
         self.Rxx  = [(gate_symbol, i, j, phase) for gate_symbol in ["Rxx"] for i in get_range(1, L-1) for j in get_range(i+1, L) for phase in self.phase_grid] 
